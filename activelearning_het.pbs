@@ -1,4 +1,4 @@
-#PBS -N wine AL regressor
+#PBS -N het AL regressor
 
 #PBS -M tgog@umich.edu
 #PBS -m a
