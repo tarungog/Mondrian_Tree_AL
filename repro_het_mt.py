@@ -22,8 +22,8 @@ def example_het_mt(seed_index):
     # n_finals = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
     # p = 5
 
-    data_seeds = [x * 11 for x in range(8)]
-    tree_seeds = [x * 13 for x in range(8)]
+    data_seeds = [x * 11 for x in range(12)]
+    tree_seeds = [x * 13 for x in range(12)]
 
     seed_combs = list(itertools.product(data_seeds, tree_seeds))
     data_seed, tree_seed = seed_combs[int(seed_index)]
