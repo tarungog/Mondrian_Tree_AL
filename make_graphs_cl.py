@@ -93,7 +93,7 @@ def main():
     bt_rn_err = axarr[1].errorbar(n_finals, BT_uc_MSE, BT_uc_MSE_var, color = 'green', marker='^', capsize=10)
 
     plt.tight_layout()
-    plt.savefig('graphs/cl_mt.pdf')
+    plt.savefig('cl_mt.pdf')
 
 
 

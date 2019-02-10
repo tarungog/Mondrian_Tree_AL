@@ -1,8 +1,0 @@
-/home/tgog/Mondrian_Tree_AL/Mondrian_Tree.py:660: UserWarning: remaining_budget is = 0.213 fraction of number of new samples. It may not be possible to get close to the optimal solution given the current locations of labelled data.
-  'of labelled data.'.format(round(abs(remaining_budget/num_samples_left),3))
-/home/tgog/Mondrian_Tree_AL/Mondrian_Tree.py:660: UserWarning: remaining_budget is = 0.287 fraction of number of new samples. It may not be possible to get close to the optimal solution given the current locations of labelled data.
-  'of labelled data.'.format(round(abs(remaining_budget/num_samples_left),3))
-/home/tgog/Mondrian_Tree_AL/Mondrian_Tree.py:660: UserWarning: remaining_budget is = 0.26 fraction of number of new samples. It may not be possible to get close to the optimal solution given the current locations of labelled data.
-  'of labelled data.'.format(round(abs(remaining_budget/num_samples_left),3))
-/home/tgog/Mondrian_Tree_AL/Mondrian_Tree.py:660: UserWarning: remaining_budget is = 0.296 fraction of number of new samples. It may not be possible to get close to the optimal solution given the current locations of labelled data.
-  'of labelled data.'.format(round(abs(remaining_budget/num_samples_left),3))
