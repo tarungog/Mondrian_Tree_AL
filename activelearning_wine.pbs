@@ -2,11 +2,11 @@
 
 #PBS -M tgog@umich.edu
 #PBS -m a
-#PBS -t 0-63
+#PBS -t 0-143
 
 #PBS -l procs=1
-#PBS -l mem=500MB
-#PBS -l walltime=0:10:00
+#PBS -l mem=250MB
+#PBS -l walltime=0:02:00
 #PBS -V
 
 #PBS -A stats_flux
