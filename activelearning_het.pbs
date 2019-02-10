@@ -6,7 +6,7 @@
 
 #PBS -l procs=1
 #PBS -l mem=250MB
-#PBS -l walltime=0:02:00
+#PBS -l walltime=0:05:00
 #PBS -V
 
 #PBS -A stats_flux
@@ -15,4 +15,4 @@
 
 cd Mondrian_Tree_AL
 
-python3 repro_wine_mt.py $PBS_ARRAYID
+python3 repro_het_mt.py $PBS_ARRAYID

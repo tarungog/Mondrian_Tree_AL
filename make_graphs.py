@@ -33,7 +33,7 @@ def main():
     mt_al = axarr[0].plot(n_finals, MT_al_MSE, color = 'red', label='Mondrian Tree - Active sampling')
     mt_rn = axarr[0].plot(n_finals, MT_rn_MSE, color = 'blue', label = 'Mondrian Tree - Random sampling')
     mt_uc = axarr[0].plot(n_finals, MT_uc_MSE, color = 'green', label = 'Mondrian Tree - Uncertainty sampling')
-    axarr[0].set_title('Wine experiment')
+    axarr[0].set_title('Wine experiment, n=64 trials')
     axarr[0].legend(loc='best')
 
     bt_al = axarr[1].plot(n_finals, BT_al_MSE, color = 'red', linestyle = '--',
@@ -82,13 +82,13 @@ def main():
     BT_uc_MSE_var = np.std(np.array(list(variance_data['BT_uc_MSE'].values())), axis=1)
 
 
-    mt_al_err = axarr[0].errorbar(n_finals, MT_al_MSE, MT_al_MSE_var, color = 'red', marker='^')
-    mt_rn_err = axarr[0].errorbar(n_finals, MT_rn_MSE,  MT_rn_MSE_var, color = 'blue', marker='^')
-    mt_uc_err = axarr[0].errorbar(n_finals, MT_uc_MSE, MT_uc_MSE_var, color = 'green', marker='^')
+    mt_al_err = axarr[0].errorbar(n_finals, MT_al_MSE, MT_al_MSE_var, color = 'red', marker='^', capsize=10)
+    mt_rn_err = axarr[0].errorbar(n_finals, MT_rn_MSE,  MT_rn_MSE_var, color = 'blue', marker='^', capsize=10)
+    mt_uc_err = axarr[0].errorbar(n_finals, MT_uc_MSE, MT_uc_MSE_var, color = 'green', marker='^', capsize=10)
 
-    bt_al_err = axarr[1].errorbar(n_finals, BT_al_MSE, BT_al_MSE_var, color = 'red', marker='^')
-    bt_rn_err = axarr[1].errorbar(n_finals, BT_rn_MSE, BT_rn_MSE_var, color = 'blue', marker='^')
-    bt_rn_err = axarr[1].errorbar(n_finals, BT_uc_MSE, BT_uc_MSE_var, color = 'green', marker='^')
+    bt_al_err = axarr[1].errorbar(n_finals, BT_al_MSE, BT_al_MSE_var, color = 'red', marker='^', capsize=10)
+    bt_rn_err = axarr[1].errorbar(n_finals, BT_rn_MSE, BT_rn_MSE_var, color = 'blue', marker='^', capsize=10)
+    bt_rn_err = axarr[1].errorbar(n_finals, BT_uc_MSE, BT_uc_MSE_var, color = 'green', marker='^', capsize=10)
 
     plt.tight_layout()
     plt.savefig('graphs/wine_mt.pdf')
