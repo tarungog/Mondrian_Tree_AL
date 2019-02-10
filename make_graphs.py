@@ -7,6 +7,8 @@ import glob
 
 def main():
     globby = glob.glob('graphs/wine_mt_*.npz')
+    print('{} data points'.format(len(globby)))
+
     n_finals = [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
 
     data = None
@@ -33,7 +35,7 @@ def main():
     mt_al = axarr[0].plot(n_finals, MT_al_MSE, color = 'red', label='Mondrian Tree - Active sampling')
     mt_rn = axarr[0].plot(n_finals, MT_rn_MSE, color = 'blue', label = 'Mondrian Tree - Random sampling')
     mt_uc = axarr[0].plot(n_finals, MT_uc_MSE, color = 'green', label = 'Mondrian Tree - Uncertainty sampling')
-    axarr[0].set_title('Wine experiment, n=128 trials')
+    axarr[0].set_title('Wine experiment, n={} trials'.format(len(globby)))
     axarr[0].legend(loc='best')
 
     bt_al = axarr[1].plot(n_finals, BT_al_MSE, color = 'red', linestyle = '--',

@@ -16,7 +16,7 @@ def scale_zero_one(col):
     col = (col - offset)/scale
     return(col)
 
-def example_cl_mt():
+def example_cl_mt(seed_index):
 
     n_finals = [100, 200, 300, 400, 500, 600, 700]
     # n_finals = [2000]
@@ -24,6 +24,7 @@ def example_cl_mt():
     data_seeds = [x * 11 for x in range(12)]
     tree_seeds = [x * 13 for x in range(12)]
 
+    import itertools
     seed_combs = list(itertools.product(data_seeds, tree_seeds))
     data_seed, tree_seed = seed_combs[int(seed_index)]
 
@@ -172,8 +173,19 @@ def example_cl_mt():
 
 
     np.savez('graphs/cl_mt_' +
-        str(data_seeds) + '_' + str(tree_seeds) + '.npz',
+        str(data_seed) + '_' + str(tree_seed) + '.npz',
         MT_al_MSE=MT_al_MSE, MT_rn_MSE=MT_rn_MSE,
         MT_uc_MSE=MT_uc_MSE, BT_uc_MSE=BT_uc_MSE,
         BT_al_MSE=BT_al_MSE, BT_rn_MSE=BT_rn_MSE
     )
+
+def main():
+    import sys
+    assert(len(sys.argv) == 2)
+    index = sys.argv[1]
+
+    example_cl_mt(index)
+
+
+if __name__ == '__main__':
+    main()
