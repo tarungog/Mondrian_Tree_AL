@@ -21,8 +21,8 @@ def example_het_mt():
     # n_finals = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
     # p = 5
 
-    data_seeds = [x * 11 for x in range(2)]
-    tree_seeds = [x * 13 for x in range(2)]
+    data_seeds = [x * 11 for x in range(8)]
+    tree_seeds = [x * 13 for x in range(8)]
 
     constant = 0
     low_std = 1

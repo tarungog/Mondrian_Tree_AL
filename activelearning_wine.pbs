@@ -1,0 +1,18 @@
+#PBS -N wine AL regressor
+
+#PBS -M tgog@umich.edu
+#PBS -m a
+#PBS -t 0-63
+
+#PBS -l procs=1
+#PBS -l mem=500MB
+#PBS -l walltime=0:10:00
+#PBS -V
+
+#PBS -A stats_flux
+#PBS -q flux
+#PBS -l qos=flux
+
+cd Mondrian_Tree_AL
+
+python3 repro_wine_mt.py $PBS_ARRAYID
