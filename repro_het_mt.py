@@ -184,7 +184,7 @@ def example_het_mt(seed_index):
 
 
     np.savez('graphs/het_mt_' +
-        str(data_seeds) + '_' + str(tree_seeds) + '.npz',
+        str(data_seed) + '_' + str(tree_seed) + '.npz',
         MT_al_MSE=MT_al_MSE, MT_rn_MSE=MT_rn_MSE,
         MT_uc_MSE=MT_uc_MSE, BT_uc_MSE=BT_uc_MSE,
         BT_al_MSE=BT_al_MSE, BT_rn_MSE=BT_rn_MSE)
