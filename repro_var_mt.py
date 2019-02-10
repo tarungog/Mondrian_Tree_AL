@@ -1,38 +1,41 @@
-from data_sets.toy_data_var import toy_data_var
+from data_sets.toy_data_var_complexity import toy_data_var_complexity
 from Mondrian_Tree import Mondrian_Tree
 from sklearn.tree import DecisionTreeRegressor
 
 import numpy as np
 import warnings
-import itertools
 import matplotlib
+import itertools
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 import copy
+import math
 
-def example_het_mt(seed_index):
+
+def example_var_mt(seed_index):
 
     n_points = 40000
     n_test_points = 5000
-    # n_finals = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
-    n_finals = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+    n_finals = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
     p = 10
     marginal = 'uniform'
 
     # n_finals = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
     # p = 5
-
     data_seeds = [x * 11 for x in range(12)]
     tree_seeds = [x * 13 for x in range(12)]
 
     seed_combs = list(itertools.product(data_seeds, tree_seeds))
     data_seed, tree_seed = seed_combs[int(seed_index)]
 
-    constant = 0
-    low_std = 1
-    high_std = 5
+    std = 1
+    low_freq = 0.1
+    high_freq = 0.05
 
-    high_area = [[0.5,1]]*p
+    low_mag = 5
+    high_mag = 20
+
+    high_area = [[0.1,1]]*p
 
     MT_al_MSE = np.zeros([len(n_finals)])
     MT_rn_MSE = np.zeros([len(n_finals)])
@@ -48,15 +51,12 @@ def example_het_mt(seed_index):
         n_start = int(n_final/2)
 
 
-        X, y = toy_data_var(n=n_points,p=p,high_area=high_area,constant=constant,
-            low_std=low_std,high_std=high_std, set_seed=data_seed, marginal=marginal)
+        X, y, true_labels = toy_data_var_complexity(n=n_points,p=p,high_area=high_area,std=std,
+            low_freq=low_freq,high_freq=high_freq, low_mag=low_mag, high_mag=high_mag,
+            set_seed=data_seed, marginal=marginal, return_true_labels=True)
 
         X = np.array(X)
         y = np.array(y)
-
-        # plt.scatter(X[:,0], X[:,1], c=y)
-        # plt.show()
-        # sys.exit()
 
         np.random.seed(data_seed)
 
@@ -68,8 +68,9 @@ def example_het_mt(seed_index):
         X = X[cv_ind,:]
         y = y[cv_ind]
 
-        X_test, y_test = toy_data_var(n=n_test_points,p=p,high_area=high_area,constant=constant,
-            low_std=low_std,high_std=high_std, set_seed=data_seed+1,marginal=marginal)
+        X_test, y_test = toy_data_var_complexity(n=n_points,p=p,high_area=high_area,std=std,
+            low_freq=low_freq,high_freq=high_freq, low_mag=low_mag, high_mag=high_mag,
+            set_seed=data_seed+1)
 
         X_test = np.array(X_test)
         y_test = np.array(y_test)
@@ -82,6 +83,7 @@ def example_het_mt(seed_index):
         MT_al = Mondrian_Tree([[0,1]]*p)
         MT_al.update_life_time(n_final**(1/(2+p))-1, set_seed=tree_seed)
         MT_rn = copy.deepcopy(MT_al)
+        MT_oracle = copy.deepcopy(MT_al)
 
         MT_al.input_data(X, range(n_start), y[:n_start])
         MT_al.make_full_leaf_list()
@@ -126,14 +128,6 @@ def example_het_mt(seed_index):
             MT_rn_preds = MT_rn.predict(X_test)
         MT_rn_preds = np.array(MT_rn_preds)
         MT_rn_MSE[n_final_ind] += sum(1/X_test.shape[0]*(y_test - MT_rn_preds)**2)
-
-        # print('Done MT_rn')
-
-        # MT_oracle
-
-        MT_oracle_MSE[n_final_ind] += sum(1/X_test.shape[0]*(y_test)**2)
-
-        # print('Done MT_oracle')
 
         # MT_uc
 
@@ -183,12 +177,12 @@ def example_het_mt(seed_index):
         BT_uc_MSE[n_final_ind] += sum(1/X_test.shape[0]*(y_test - BT_uc_preds)**2)
 
 
-    np.savez('graphs/het_mt_' +
-        str(data_seeds) + '_' + str(tree_seeds) + '.npz',
+    np.savez('graphs/var_mt' +
+        str(data_seed) + '_' + str(tree_seed) + '.npz',
         MT_al_MSE=MT_al_MSE, MT_rn_MSE=MT_rn_MSE,
         MT_uc_MSE=MT_uc_MSE, BT_uc_MSE=BT_uc_MSE,
-        BT_al_MSE=BT_al_MSE, BT_rn_MSE=BT_rn_MSE)
-
+        BT_al_MSE=BT_al_MSE, BT_rn_MSE=BT_rn_MSE
+    )
 
 
 def main():
@@ -196,8 +190,9 @@ def main():
     assert(len(sys.argv) == 2)
     index = sys.argv[1]
 
-    example_het_mt(index)
+    example_var_mt(index)
 
 
 if __name__ == '__main__':
     main()
+
