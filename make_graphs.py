@@ -33,7 +33,7 @@ def main():
     mt_al = axarr[0].plot(n_finals, MT_al_MSE, color = 'red', label='Mondrian Tree - Active sampling')
     mt_rn = axarr[0].plot(n_finals, MT_rn_MSE, color = 'blue', label = 'Mondrian Tree - Random sampling')
     mt_uc = axarr[0].plot(n_finals, MT_uc_MSE, color = 'green', label = 'Mondrian Tree - Uncertainty sampling')
-    axarr[0].set_title('Wine experiment, n=64 trials')
+    axarr[0].set_title('Wine experiment, n=128 trials')
     axarr[0].legend(loc='best')
 
     bt_al = axarr[1].plot(n_finals, BT_al_MSE, color = 'red', linestyle = '--',
