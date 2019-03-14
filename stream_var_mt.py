@@ -16,9 +16,9 @@ from Mondrian_Tree import Mondrian_Tree
 RANDOM = True
 ACTIVE = True
 
-PLUS_ONE = False
-
-N_FINALS = 500
+PLUS_ONE = True
+N_FINALS = None
+DIST = None
 
 class Stream:
     def __init__(self, set_builder_func, p, step_size=1000, **kwargs):
@@ -150,7 +150,7 @@ def example_var_mt(seed_index):
                 MT_al.al_set_default_var_global_var()
                 MT_al.al_calculate_leaf_proportions()
                 # MT_al.al_calculate_leaf_number_new_labels(n, stream=True)
-            MT_al.al_calculate_sk_stream()
+                MT_al.al_calculate_sk_stream()
 
             props = copy.copy(MT_al.sk_stream)
 
@@ -186,17 +186,17 @@ def example_var_mt(seed_index):
 
         print(" Done with active, took {} points".format(s.idx))
 
-    plt.figure()
-    if RANDOM:
-        n_range = range(5, len(MT_rn_MSE) * 5 + 1, 5)
-        plt.plot(n_range, MT_rn_MSE, label="random")
-    if ACTIVE:
-        n_range = range(5, len(MT_al_MSE) * 5 + 1, 5)
-        plt.plot(n_range, MT_al_MSE, label="active")
+    # plt.figure()
+    # if RANDOM:
+    #     n_range = range(5, len(MT_rn_MSE) * 5 + 1, 5)
+    #     plt.plot(n_range, MT_rn_MSE, label="random")
+    # if ACTIVE:
+    #     n_range = range(5, len(MT_al_MSE) * 5 + 1, 5)
+    #     plt.plot(n_range, MT_al_MSE, label="active")
 
-    plt.legend()
+    # plt.legend()
 
-    plt.savefig('test.png')
+    # plt.savefig('test.png')
 
     # np.savez('streaming_trials/var_mt_' +
     #     str(seed) + '.npz',
@@ -205,13 +205,76 @@ def example_var_mt(seed_index):
     #     n_grid=n_grid,
     # )
 
+    return MT_rn_MSE, MT_al_MSE, s.idx
+
 
 def main():
-    import sys
-    assert(len(sys.argv) == 2)
-    index = sys.argv[1]
+    parser = ArgumentParser()
+    parser.add_argument(
+                    'finals', dest='final', action='store',
+                    default=500, type=int
+                )
+    parser.add_argument(
+                    '--plus_one', '-p', dest='plus_one',
+                    action='store_true', default=False
+                )
 
-    example_var_mt(index)
+    parser.add_argument(
+                    '--dist', '-d', dest='dist', type=str,
+                    action='store', choices=['het', 'var'], default='var'
+                )
+
+    args = parser.parse_args()
+
+    N_FINALS = args.final
+    PLUS_ONE = args.plus_one
+    DIST = args.dist
+
+    RN_MSE = []
+    AL_MSE = []
+    sidxs = []
+
+    trials = 500
+
+    for index in range(trials):
+        rn_mse, al_mse, sidx = example_var_mt(index)
+        RN_MSE.append(rn_mse)
+        AL_MSE.append(al_mse)
+        sidxs.append(sidx)
+
+
+    RN_MSE = np.array(RN_MSE)
+    AL_MSE = np.array(AL_MSE)
+    sidxs = np.array(sidxs)
+
+    rn_mean = RN_MSE.mean(0)
+    al_mean = AL_MSE.mean(0)
+
+    al_MSE_var = np.std(AL_MSE, axis=0)
+    rn_MSE_var = np.std(RN_MSE, axis=0)
+
+    plt.figure()
+    if RANDOM:
+        n_range = range(5, len(rn_mean) * 5 + 1, 5)
+        plt.plot(n_range, rn_mean, label="random")
+        # plt.errorbar(n_range, rn_mean, rn_MSE_var, marker='^', capsize=5)
+    if ACTIVE:
+        n_range = range(5, len(al_mean) * 5 + 1, 5)
+        plt.plot(n_range, al_mean, label="active")
+        # plt.errorbar(n_range, al_mean, al_MSE_var, marker='^', capsize=5)
+
+    plt.legend()
+    plt.title('{}_trials_alg2vsrand_{}_upbefore'.format(trials, sidxs.mean()))
+    plt.savefig('{}_trials_alg2vsrand_{}_upbefore.png'.format(trials, sidxs.mean()))
+
+
+    plt.figure()
+    corrected_mt_al_vals = AL_MSE - RN_MSE
+
+    plt.title("test box")
+    plt.boxplot(corrected_mt_al_vals, labels=n_range)
+    plt.axhline(linewidth=1, color='r')
+    plt.savefig('corrected_box_{}_trials_alg2vsrand_{}_upbefore.png'.format(trials, sidxs.mean()))
 
 
 if __name__ == '__main__':

@@ -595,10 +595,14 @@ class Mondrian_Tree:
             self._al_proportions_up_to_date = True
 
     def al_calculate_sk_stream(self):
+
+
         if not self._al_proportions_up_to_date:
             self.al_calculate_leaf_proportions()
 
-        self.sk_stream = np.array(self._al_proportions) / np.array(self._full_leaf_marginal_list)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.sk_stream = np.array(self._al_proportions) / np.array(self._full_leaf_marginal_list)
         self.sk_stream[np.isnan(self.sk_stream)] = 0
 
         eta = 1 / max(self.sk_stream)
@@ -606,6 +610,20 @@ class Mondrian_Tree:
         assert(eta != 0.0)
         self.sk_stream = self.sk_stream * eta
 
+    # def al_stream_determ(self):
+    #     if not self._al_proportions_up_to_date:
+    #         self.al_calculate_leaf_proportions()
+
+    #     len(labelled_index) for label
+    #     self._al_proportions
+
+    #     self._num_leaves_
+    #     len(self.labelled_index)
+
+    #     eta = 1 / max(self.sk_stream)
+    #     assert(eta != np.nan)
+    #     assert(eta != 0.0)
+    #     self.sk_stream = self.sk_stream * eta
 
     def al_calculate_leaf_number_new_labels(self, num_samples_total, round_by='smallest', stream=False):
         '''Calculate how many new labelled points each leaf should get to get as close as
