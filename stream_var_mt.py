@@ -16,7 +16,7 @@ from Mondrian_Tree import Mondrian_Tree
 RANDOM = True
 ACTIVE = True
 
-PLUS_ONE = True
+PLUS_ONE = None
 N_FINALS = None
 DIST = None
 
@@ -211,8 +211,7 @@ def example_var_mt(seed_index):
 def main():
     parser = ArgumentParser()
     parser.add_argument(
-                    'finals', dest='final', action='store',
-                    default=500, type=int
+                    'finals', action='store', default=500, type=int
                 )
     parser.add_argument(
                     '--plus_one', '-p', dest='plus_one',
@@ -226,7 +225,11 @@ def main():
 
     args = parser.parse_args()
 
-    N_FINALS = args.final
+    global N_FINALS
+    global PLUS_ONE
+    global DIST
+
+    N_FINALS = args.finals
     PLUS_ONE = args.plus_one
     DIST = args.dist
 
