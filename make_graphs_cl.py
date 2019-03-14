@@ -96,28 +96,22 @@ def main():
     plt.savefig('cl_mt.pdf')
 
 
+    corrected_mt_al_vals = np.array(list(variance_data['MT_al_MSE'].values())) - np.array(list(variance_data['MT_rn_MSE'].values()))
 
+    corrected_bt_al_vals = np.array(list(variance_data['BT_al_MSE'].values())) - np.array(list(variance_data['BT_rn_MSE'].values()))
 
+    plt.figure()
+    plt.title("CL Mondrian Trees boxplot normed MSE")
+    plt.boxplot(corrected_mt_al_vals.T, labels=n_finals)
+    plt.axhline(linewidth=1, color='r')
+    plt.savefig('cl_corrected_boxplot_mt.png')
 
+    plt.figure()
+    plt.title("CL Breiman Trees boxplot normed MSE")
+    plt.boxplot(corrected_bt_al_vals.T, labels=n_finals)
+    plt.axhline(linewidth=1, color='r')
+    plt.savefig('cl_corrected_boxplot_bt.png')
 
-    # plt.boxplot(MT_al_MSE, n_finals) #, label='Mondrian Tree - Active sampling'
-    # plt.title('Wine: Mondrian Tree Active Sampling')
-    # plt.boxplot(MT_rn_MSE, n_finals) # , label = 'Mondrian Tree - Random sampling'
-    # plt.title('Wine: Mondrian Tree - Random sampling')
-    # plt.boxplot(MT_uc_MSE, n_finals) # , label = 'Mondrian Tree - Uncertainty sampling'
-    # plt.title('Wine: Mondrian Tree - Uncertainty sampling')
-
-    # plt.boxplot(BT_al_MSE, n_finals) # , label = 'Breiman Tree - Active sampling'
-    # plt.title('Wine: Breiman Tree - Active sampling')
-    # plt.boxplot(BT_rn_MSE, n_finals) # , label = 'Breiman Tree - Random sampling'
-    # plt.title('Wine: Breiman Tree - Random sampling')
-    # plt.boxplot(BT_uc_MSE, n_finals) # , label = 'Breiman Tree - Uncertainty sampling'
-    # plt.title('Wine: Breiman Tree - Uncertainty sampling')
-
-
-
-    # plt.tight_layout()
-    # plt.savefig('graphs/wine_mt_box.pdf')
 
 if __name__ == '__main__':
     main()

@@ -1,11 +1,14 @@
-import random
 import copy
-import warnings
 import math
+import random
+import warnings
+
+import numpy as np
 
 import core.utils as utils
 from core.LeafNode import LeafNode
 from core.SplitNode import SplitNode
+
 
 class Mondrian_Tree:
 
@@ -13,18 +16,18 @@ class Mondrian_Tree:
     Main class for Mondrian Trees
 
     Args:
-        linear_dims (list): A p dim list of 2 dim lists indicating the upper and 
+        linear_dims (list): A p dim list of 2 dim lists indicating the upper and
         lower bounds of the entire space. New data points should be able to take points
         outside this space (probably!) but no partitions will take place outside this
-        space so any partitioning will just be from infinite continuations of edge 
+        space so any partitioning will just be from infinite continuations of edge
         partitions.
     '''
 
     def __init__(self, linear_dims, seed=None):
 
         if seed is not None:
-            random.seed(seed)
-            
+            np.random.seed(seed)
+
         self._linear_dims = linear_dims
         self._root = LeafNode(linear_dims = self._linear_dims)
         self._num_dimensions = len(linear_dims)
@@ -60,18 +63,18 @@ class Mondrian_Tree:
     def __str__(self):
         # Add more as needed
         return (
-        'Number of dimensions = {}\n' 
+        'Number of dimensions = {}\n'
         'Number of leaf nodes = {}\n'
         'Life time parameter = {}\n'
         '\n'
         'Number of data points = {}\n'
         'Number of labels = {}'.format(
-            self._num_dimensions, self._num_leaves, self._life_time, self._num_points, 
+            self._num_dimensions, self._num_leaves, self._life_time, self._num_points,
             self._num_labelled))
 
     def _test_point(self, new_point):
         '''Tests an input point, raising errors if it's a bad type and converting it from
-        a numpy array to a list if needed 
+        a numpy array to a list if needed
         '''
 
         try:
@@ -100,12 +103,12 @@ class Mondrian_Tree:
 
     # Tree building and updating methods: Builds the tree based on the life time, and
     # put data into the tree. The tree is build completely independently of any data,
-    # and can be built without having any data in it. The data can be added later 
-    # and it will be put into the correct leaves and everything. 
+    # and can be built without having any data in it. The data can be added later
+    # and it will be put into the correct leaves and everything.
 
-    def update_life_time(self, new_life_time, set_seed = None):
+    def update_life_time(self, new_life_time):
 
-        '''Function for updating the tree with a new life time parameter, potentially 
+        '''Function for updating the tree with a new life time parameter, potentially
         growing the tree. Grows until the next split would occur after the new life
         time, moving any data within the tree into the new leaves.
         '''
@@ -130,15 +133,11 @@ class Mondrian_Tree:
         self._active_learning_proportions_up_to_date = False
 
         # We add new splits until the next split is after the new life time
-
-        if set_seed is not None:
-            random.seed(set_seed)
-
-        next_split_time = old_life_time + random.expovariate(self._root.subtree_linear_dim)
+        next_split_time = old_life_time + np.random.exponential(1.0 / self._root.subtree_linear_dim)
         while next_split_time < self._life_time:
 
-            # We need to pick which leaf to split. We move down the tree, moving left or 
-            # right proportional to the linear_dim of all leaves in that subtree 
+            # We need to pick which leaf to split. We move down the tree, moving left or
+            # right proportional to the linear_dim of all leaves in that subtree
             # which is the subtree_linear_dim parameter of each node.
 
             self._num_leaves += 1
@@ -152,7 +151,7 @@ class Mondrian_Tree:
                 left_prob = left_prob / (left_prob + right_prob)
                 right_prob = right_prob / (left_prob + right_prob)
 
-                rand_split_val = random.random()
+                rand_split_val = np.random.rand()
 
                 if self._verbose:
                     print(
@@ -180,7 +179,7 @@ class Mondrian_Tree:
 
             split_dim = utils.choices(range(self._num_dimensions), weights=dimension_probs)[0]
             split_interval = curr_node.linear_dims[split_dim]
-            split_val = random.uniform(split_interval[0], split_interval[1])
+            split_val = np.random.uniform(split_interval[0], split_interval[1])
 
             left_linear_dims = copy.deepcopy(curr_node.linear_dims)
             left_linear_dims[split_dim] = [split_interval[0],split_val]
@@ -217,7 +216,7 @@ class Mondrian_Tree:
             # Percolating up the change in subtree_lin_dim
 
             subtree_lin_dim_change = (
-                new_left_node.subtree_linear_dim + 
+                new_left_node.subtree_linear_dim +
                 new_right_node.subtree_linear_dim -
                 curr_node.subtree_linear_dim)
 
@@ -232,16 +231,16 @@ class Mondrian_Tree:
             for ind in curr_node.unlabelled_index:
                 new_split_node.leaf_for_point(self.points[ind]).extend_unlabelled_index([ind])
 
-            next_split_time = next_split_time + random.expovariate(self._root.subtree_linear_dim)
+            next_split_time = next_split_time + np.random.exponential(1.0 / self._root.subtree_linear_dim)
 
     def input_data(self, all_data, labelled_indices, labels, copy_data=True):
-        '''Puts in data for Mondrian Tree. 
-        all_data should be a list of lists (or numpy array, points by row) with all data points, 
+        '''Puts in data for Mondrian Tree.
+        all_data should be a list of lists (or numpy array, points by row) with all data points,
         labelled_indices should be a list of the indicies for data points which we have the
         labels for, and labels should be an equal length list of those points labels.
 
-        Should work with inputting things as numpy arrays, but this is the only place you can 
-        safely use numpy arrays. 
+        Should work with inputting things as numpy arrays, but this is the only place you can
+        safely use numpy arrays.
         '''
 
         if copy_data:
@@ -304,7 +303,7 @@ class Mondrian_Tree:
 
     def label_point(self, index, value):
         '''Adds a label to a specific data point. Throws an error if that point
-        is already labelled. 
+        is already labelled.
         '''
 
         if self.labels is None:
@@ -362,10 +361,10 @@ class Mondrian_Tree:
     # Leaf list building methods: We want the tree to have a list of nodes as well as
     # various statistics about those nodes so we can easily access them. All the lists
     # will be aligned, so the ith value in a list will correspond the the ith node in the
-    # node list. 
+    # node list.
 
     def make_full_leaf_list(self):
-        '''Makes a list with pointers to every leaf in the tree. Likely to be expensive so 
+        '''Makes a list with pointers to every leaf in the tree. Likely to be expensive so
         only do this if you're pre-building a tree for extensive use later. Not needed for
         things like prediction, but needed for cell statistics and active learning.
         '''
@@ -448,7 +447,7 @@ class Mondrian_Tree:
     ###########################################
 
     # Mondrian Tree interaction methods. These methods actually use our Mondrian tree to
-    # make predictions and such. 
+    # make predictions and such.
 
     def predict(self, new_point):
 
@@ -468,7 +467,7 @@ class Mondrian_Tree:
         if new_point_depth > 2:
             raise ValueError('Input has too many nested structures')
 
-        if new_point_depth == 2 or (str(type(new_point)) == "<class 'numpy.ndarray'>" and 
+        if new_point_depth == 2 or (str(type(new_point)) == "<class 'numpy.ndarray'>" and
             len(new_point.shape) == 2):
             preds = []
             for i in range(len(new_point)):
@@ -491,7 +490,7 @@ class Mondrian_Tree:
                 'or use the global data average as your prediction. But whatever solution you use dependent '
                 'on what you are doing. You should be able to catch this warning and handle it automatically '
                 'using the warning module with a try/except statement.'.format(self.prediction_default_value))
-            return self.prediction_default_value 
+            return self.prediction_default_value
         elif self._full_leaf_mean_list_up_to_date:
             return self._full_leaf_mean_list[correct_leaf.full_leaf_list_pos]
 
@@ -504,7 +503,7 @@ class Mondrian_Tree:
         to predict something other than the mean (say the median), or say sample from the tree's
         predicted conditional distribution, you can use this to help implement whatever you want.
 
-        Returns the labelled or unlabelled index lists. Labelled is the default. Pick using 
+        Returns the labelled or unlabelled index lists. Labelled is the default. Pick using
         'labelled' or 'unlabelled'
         '''
 
@@ -595,11 +594,24 @@ class Mondrian_Tree:
             self._al_proportions = al_proportions
             self._al_proportions_up_to_date = True
 
-    def al_calculate_leaf_number_new_labels(self, num_samples_total, round_by = 'smallest'):
-        '''Calculate how many new labelled points each leaf should get to get as close as 
+    def al_calculate_sk_stream(self):
+        if not self._al_proportions_up_to_date:
+            self.al_calculate_leaf_proportions()
+
+        self.sk_stream = np.array(self._al_proportions) / np.array(self._full_leaf_marginal_list)
+        self.sk_stream[np.isnan(self.sk_stream)] = 0
+
+        eta = 1 / max(self.sk_stream)
+        assert(eta != np.nan)
+        assert(eta != 0.0)
+        self.sk_stream = self.sk_stream * eta
+
+
+    def al_calculate_leaf_number_new_labels(self, num_samples_total, round_by='smallest', stream=False):
+        '''Calculate how many new labelled points each leaf should get to get as close as
         possible to the proportions in _al_proportions. Since these proportions might not
         be possible with integer number of points, we have two heuristic ways of making
-        integer if we have too few point. 
+        integer if we have too few point.
 
         The first is to floor every number and then add one to the leaves with the highest
         fractions until we've hit our budget.
@@ -607,7 +619,7 @@ class Mondrian_Tree:
         The second is to floor every number and then add one to the leaves with the smallest
         number of points. This is the current default.
 
-        If we have too many points, we remove from the largest leaves till we are back in our 
+        If we have too many points, we remove from the largest leaves till we are back in our
         budget.
 
         Note these are all heuristics, and can be changed and challenged.
@@ -617,7 +629,7 @@ class Mondrian_Tree:
         if num_samples_total < self._num_labelled:
             raise ValueError('The total given number of samples has already been exceeded.')
 
-        if num_samples_total > self._num_points:
+        if num_samples_total > self._num_points and not stream:
             raise ValueError('The total number of samples is greater than the number of points.')
 
         if not self._al_proportions_up_to_date:
@@ -647,7 +659,7 @@ class Mondrian_Tree:
         full_leaves = []
 
         for i, num in enumerate(num_per_leaf):
-            if num >= unlabelled_num_per_leaf[i]:
+            if num >= unlabelled_num_per_leaf[i] and not stream:
                 num_per_leaf[i] = unlabelled_num_per_leaf[i]
                 full_leaves.append(i)
                 # print(i, num)
@@ -678,7 +690,7 @@ class Mondrian_Tree:
                 if all([x==0 for x in num_per_leaf_fractions]):
                     num_per_leaf_fractions = [x - math.floor(x) for x in num_per_leaf_fractions]
                     for i, num in enumerate(num_per_leaf):
-                        if num >= unlabelled_num_per_leaf[i]:
+                        if num >= unlabelled_num_per_leaf[i] and not stream:
                             num_per_leaf[i] = unlabelled_num_per_leaf[i]
                             full_leaves.append(i)
                     for ind in full_leaves:
@@ -698,7 +710,7 @@ class Mondrian_Tree:
                 if all([math.isinf(x) for x in total_num_per_leaf]):
                     total_num_per_leaf = [math.floor(x*num_samples_total) for x in self._al_proportions]
                     for i, num in enumerate(num_per_leaf):
-                        if num >= unlabelled_num_per_leaf[i]:
+                        if num >= unlabelled_num_per_leaf[i] and not stream:
                             num_per_leaf[i] = unlabelled_num_per_leaf[i]
                             full_leaves.append(i)
                     for ind in full_leaves:
@@ -744,10 +756,10 @@ class Mondrian_Tree:
 
     def al_calculate_point_probabilities_adjustment(self, num_samples_total):
         '''Calculate the corresponding probabilities given to each point such that in expectation
-        the number of points sampled from each leaf will be the leaf proportion times the 
+        the number of points sampled from each leaf will be the leaf proportion times the
         num_samples_total.
 
-        If the leaf has already had more samples than expected, gives probability 0. All 
+        If the leaf has already had more samples than expected, gives probability 0. All
         probabilities are normalized to account for rounding issues and passive oversampling of
         leaves (NOTE: THIS ROUNDING IS AD HOC SOLUTION TO PROBLEM)
         '''
@@ -779,4 +791,3 @@ class Mondrian_Tree:
                     point_prob_list[i] = point_prob_list[i]/tot
 
         self._al_point_weights_adjustment = point_prob_list
-

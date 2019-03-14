@@ -3,7 +3,13 @@
 import random
 import math
 
-def toy_data_var_complexity(n,p,high_area,std=1,low_freq=0.2,high_freq=0.05, low_mag=1, high_mag=2, 
+class ComplexityStream:
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+def toy_data_var_complexity(n,p,high_area,std=1,low_freq=0.2,high_freq=0.05, low_mag=1, high_mag=2,
     set_seed=None, marginal = 'uniform', return_true_labels=False, useless_dims = 0):
 
     if set_seed is not None:
