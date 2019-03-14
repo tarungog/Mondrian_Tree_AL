@@ -1,0 +1,16 @@
+#PBS -N var AL stream
+
+#PBS -M tgog@umich.edu
+#PBS -m a
+
+#PBS -l procs=1
+#PBS -l mem=250MB
+#PBS -l walltime=0:20:00
+#PBS -V
+
+#PBS -A stats_flux
+#PBS -q flux
+#PBS -l qos=flux
+
+cd Mondrian_Tree_AL
+python3 stream_var_mt.py 1500
