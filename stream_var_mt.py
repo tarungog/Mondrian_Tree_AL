@@ -103,10 +103,10 @@ def example_var_mt(seed_index):
     MT_al_MSE = []
     MT_rn_MSE = []
 
-    MT_al = Mondrian_Tree([[0,1]]*p)
-    MT_rn = Mondrian_Tree([[0,1]]*p)
 
     if RANDOM:
+        MT_rn = Mondrian_Tree([[0,1]]*p, seed=seed)
+
         while s.idx < n_final:
             x, y = s.point
             MT_rn.add_data_point(x, y)
@@ -121,6 +121,8 @@ def example_var_mt(seed_index):
 
 
     if ACTIVE:
+        MT_al = Mondrian_Tree([[0,1]]*p, seed=seed)
+
         seeding(seed_index)
         s.reset()
         X_test, y_test = toy_data_var_complexity(n=200,p=p,high_area=high_area,std=std,
@@ -159,7 +161,9 @@ def example_var_mt(seed_index):
             leaf_idx = MT_al._root.leaf_for_point(x).full_leaf_list_pos
             prop = props[leaf_idx]
 
-            if prop > 0.0 and np.random.rand() < prop:
+            state = np.random.get_state()
+            if prop > 0.0 and np.random.random_sample() < prop:
+                np.random.set_state(state)
                 MT_al.add_data_point(x, y)
                 n += 1
 
@@ -176,8 +180,8 @@ def example_var_mt(seed_index):
                         mse = evaluate(MT_al, X_test, y_test)
                         MT_al_MSE.append(mse)
 
-
             else:
+                np.random.set_state(state)
                 MT_al.add_data_point(x, None)
 
             MT_al.al_calculate_sk_stream()
