@@ -1,5 +1,6 @@
 import copy
 import random
+import time
 import warnings
 from argparse import ArgumentParser
 
@@ -19,6 +20,7 @@ ACTIVE = True
 PLUS_ONE = None
 N_FINALS = None
 DIST = None
+VARIANT = None
 
 class Stream:
     def __init__(self, set_builder_func, p, step_size=1000, **kwargs):
@@ -144,26 +146,33 @@ def example_var_mt(seed_index):
                 mse = evaluate(MT_al, X_test, y_test)
                 MT_al_MSE.append(mse)
 
+        MT_al.update_leaf_lists()
+        MT_al.al_set_default_var_global_var()
+        MT_al.al_calculate_leaf_proportions()
+        MT_al.al_stream_variant(VARIANT)
+
         # active learning
+        misses = 0
         while n < n_final:
 
-            if not MT_al._full_leaf_list_up_to_date:
-                MT_al.update_leaf_lists()
-                MT_al.al_set_default_var_global_var()
-                MT_al.al_calculate_leaf_proportions()
-                # MT_al.al_calculate_leaf_number_new_labels(n, stream=True)
-                MT_al.al_calculate_sk_stream()
+            # if not MT_al._full_leaf_list_up_to_date:
+                # MT_al.update_leaf_lists()
+                # MT_al.al_set_default_var_global_var()
+                # MT_al.al_calculate_leaf_proportions()
+                # MT_al.al_stream_variant(VARIANT)
 
-            props = copy.copy(MT_al.sk_stream)
+            props = copy.copy(MT_al.prop_jump)
 
             # generate new point
             x, y = s.point
             leaf_idx = MT_al._root.leaf_for_point(x).full_leaf_list_pos
             prop = props[leaf_idx]
 
-            state = np.random.get_state()
-            if prop > 0.0 and np.random.random_sample() < prop:
-                np.random.set_state(state)
+            draw = np.random.random_sample()
+
+            if prop > 0.0 and draw < prop:
+                misses = 0
+                print('POINT ACCEPTED', n)
                 MT_al.add_data_point(x, y)
                 n += 1
 
@@ -180,12 +189,18 @@ def example_var_mt(seed_index):
                         mse = evaluate(MT_al, X_test, y_test)
                         MT_al_MSE.append(mse)
 
+                if n % 20 == 0:
+                    print('STREAM EFFICIENCY', MT_al.stream_efficiency()[0])
+
             else:
-                np.random.set_state(state)
                 MT_al.add_data_point(x, None)
+                misses += 1
+                if misses >= 2000:
+                    print(MT_al.prop_jump)
+                    print('draw', draw)
+                    print('prop', prop)
 
-            MT_al.al_calculate_sk_stream()
-
+            MT_al.al_stream_variant(VARIANT)
 
 
         print(" Done with active, took {} points".format(s.idx))
@@ -227,28 +242,45 @@ def main():
                     action='store', choices=['het', 'var'], default='var'
                 )
 
+    parser.add_argument(
+                    '--variant', '-v', dest='variant', type=int,
+                    action='store', choices=[0, 1, 2, 3, 4, 5, 6], default=0
+                )
+
+    parser.add_argument(
+                    '--trials', '-t', dest='trials', type=int,
+                    action='store', default=10
+                )
+
     args = parser.parse_args()
 
     global N_FINALS
     global PLUS_ONE
     global DIST
+    global VARIANT
 
     N_FINALS = args.finals
     PLUS_ONE = args.plus_one
     DIST = args.dist
+    VARIANT = args.variant
 
     RN_MSE = []
     AL_MSE = []
     sidxs = []
 
-    trials = 500
+    trials = args.trials
 
     for index in range(trials):
+        start = time.process_time()
+
         rn_mse, al_mse, sidx = example_var_mt(index)
         RN_MSE.append(rn_mse)
         AL_MSE.append(al_mse)
         sidxs.append(sidx)
 
+        end = time.process_time()
+
+        print('time taken for trial:', end - start)
 
     RN_MSE = np.array(RN_MSE)
     AL_MSE = np.array(AL_MSE)
@@ -270,18 +302,21 @@ def main():
         plt.plot(n_range, al_mean, label="active")
         # plt.errorbar(n_range, al_mean, al_MSE_var, marker='^', capsize=5)
 
+    title = '{}_trials_{}_points_{}_variant'.format(trials, sidxs.mean(), VARIANT)
+
     plt.legend()
-    plt.title('{}_trials_alg2vsrand_{}_upbefore'.format(trials, sidxs.mean()))
-    plt.savefig('{}_trials_alg2vsrand_{}_upbefore.png'.format(trials, sidxs.mean()))
+    plt.title(title)
+    plt.savefig('{}.png'.format(title))
+    print(title)
 
 
-    plt.figure()
-    corrected_mt_al_vals = AL_MSE - RN_MSE
+    # plt.figure()
+    # corrected_mt_al_vals = AL_MSE - RN_MSE
 
-    plt.title("test box")
-    plt.boxplot(corrected_mt_al_vals, labels=n_range)
-    plt.axhline(linewidth=1, color='r')
-    plt.savefig('corrected_box_{}_trials_alg2vsrand_{}_upbefore.png'.format(trials, sidxs.mean()))
+    # plt.title("test box")
+    # plt.boxplot(corrected_mt_al_vals, labels=n_range)
+    # plt.axhline(linewidth=1, color='r')
+    # plt.savefig('corrected_box_{}_trials_alg2vsrand_{}_upbefore.png'.format(trials, sidxs.mean()))
 
 
 if __name__ == '__main__':

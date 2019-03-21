@@ -4,6 +4,7 @@ import random
 import warnings
 
 import numpy as np
+from scipy.special import softmax
 
 import core.utils as utils
 from core.LeafNode import LeafNode
@@ -557,7 +558,6 @@ class Mondrian_Tree:
         '''Calculates estimates of the leaf proportions, using estimates for leaf variances and
         marginal probabilities, as described in <paper>
         '''
-
         # Ensure all the lists we need are built
 
         if not self._full_leaf_list_up_to_date:
@@ -594,36 +594,158 @@ class Mondrian_Tree:
             self._al_proportions = al_proportions
             self._al_proportions_up_to_date = True
 
-    def al_calculate_sk_stream(self):
+    def stream_efficiency(self):
+        return np.array([self._num_labelled]) / np.array([self._num_points])
+
+    def al_stream_variant(self, var):
+        self.update_leaf_lists()
+        self.al_calculate_leaf_proportions()
+
+        if var == 0:
+            self.al_stream_variant_0()
+        elif var == 1:
+            self.al_stream_variant_1()
+        elif var == 2:
+            self.al_stream_variant_2()
+        elif var == 3:
+            self.al_stream_variant_3()
+        elif var == 4:
+            self.al_stream_variant_4()
+        elif var == 5:
+            self.al_stream_variant_5()
+        elif var == 6:
+            self.al_stream_variant_6()
+        else:
+            raise Exception('invalid stream variant')
+
+    def al_stream_variant_0(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.prop_jump = np.array(self._al_proportions) / np.array(self._full_leaf_marginal_list)
+        self.prop_jump[np.isnan(self.prop_jump)] = 0
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
+
+    # very greedy
+    def al_stream_variant_1(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+
+        self.prop_jump = np.zeros(current_leaf_props.shape)
+        self.prop_jump[current_leaf_props <= self._al_proportions] = 1.0
 
 
-        if not self._al_proportions_up_to_date:
-            self.al_calculate_leaf_proportions()
+    # not greedy
+    def al_stream_variant_2(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = np.zeros(current_leaf_props.shape)
+        min_idx = np.argmin(current_leaf_props - al_props)
+        self.prop_jump[min_idx] = 1.0
+
+    # softmax
+    def al_stream_variant_3(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = softmax(
+            al_props - current_leaf_props
+        )
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
+
+    # high temp softmax
+    def al_stream_variant_6(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = softmax(
+            (al_props - current_leaf_props) / 10.0
+        )
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
+
+
+
+    # (qk - rk)/pk
+    def al_stream_variant_4(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+
+        al_props = np.array(self._al_proportions)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.sk_stream = np.array(self._al_proportions) / np.array(self._full_leaf_marginal_list)
-        self.sk_stream[np.isnan(self.sk_stream)] = 0
+            self.prop_jump = (al_props - current_leaf_props) / np.array(self._full_leaf_marginal_list)
+        self.prop_jump[np.isnan(self.prop_jump)] = 0
 
-        eta = 1 / max(self.sk_stream)
-        assert(eta != np.nan)
-        assert(eta != 0.0)
-        self.sk_stream = self.sk_stream * eta
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
 
-    # def al_stream_determ(self):
-    #     if not self._al_proportions_up_to_date:
-    #         self.al_calculate_leaf_proportions()
+    # (qk - rk)/(qk*pk)
+    def al_stream_variant_5(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+        current_num_per_leaf = np.array(current_num_per_leaf)
 
-    #     len(labelled_index) for label
-    #     self._al_proportions
 
-    #     self._num_leaves_
-    #     len(self.labelled_index)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-    #     eta = 1 / max(self.sk_stream)
-    #     assert(eta != np.nan)
-    #     assert(eta != 0.0)
-    #     self.sk_stream = self.sk_stream * eta
+            current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+
+            al_props = np.array(self._al_proportions)
+
+            self.prop_jump = (al_props - current_leaf_props) / np.array(self._full_leaf_marginal_list)
+            self.prop_jump[np.isnan(self.prop_jump)] = 0
+            self.prop_jump /= (np.array(self._full_leaf_marginal_list) * al_props)
+            self.prop_jump[np.isnan(self.prop_jump)] = 0
+
+            self.prop_jump = np.interp(
+                self.prop_jump,
+                (self.prop_jump.min(), self.prop_jump.max()),
+                (0.0, 1.0)
+            )
+
 
     def al_calculate_leaf_number_new_labels(self, num_samples_total, round_by='smallest', stream=False):
         '''Calculate how many new labelled points each leaf should get to get as close as
