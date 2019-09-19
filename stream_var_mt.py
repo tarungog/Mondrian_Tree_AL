@@ -3,6 +3,7 @@ import random
 import time
 import warnings
 from argparse import ArgumentParser
+from itertools import product
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -55,12 +56,14 @@ class Stream:
 
 
 def seeding(seed_index):
-    seeds = list(range(1000))
-    seed = seeds[int(seed_index)]
-    random.seed(seed)
-    np.random.seed(seed)
-    print(seed)
-    return seed
+    data_seeds = list(range(20))
+    tree_seeds = list(range(20))
+    seeds = list(product(data_seeds, tree_seeds))
+    data, tree  = seeds[int(seed_index)]
+    random.seed(data)
+    np.random.seed(tree)
+    print(data, tree)
+    return tree
 
 
 def evaluate(tree, X_test, y_test):
@@ -72,7 +75,7 @@ def evaluate(tree, X_test, y_test):
     return np.mean((y_hat - y_test) ** 2)
 
 def example_var_mt(seed_index):
-    seed = seeding(seed_index)
+    tree_seed = seeding(seed_index)
 
     p = 10
     marginal = 'uniform'
@@ -107,7 +110,7 @@ def example_var_mt(seed_index):
 
 
     if RANDOM:
-        MT_rn = Mondrian_Tree([[0,1]]*p, seed=seed)
+        MT_rn = Mondrian_Tree([[0,1]]*p, seed=tree_seed)
 
         while s.idx < n_final:
             x, y = s.point
@@ -123,7 +126,7 @@ def example_var_mt(seed_index):
 
 
     if ACTIVE:
-        MT_al = Mondrian_Tree([[0,1]]*p, seed=seed)
+        MT_al = Mondrian_Tree([[0,1]]*p, seed=tree_seed)
 
         seeding(seed_index)
         s.reset()
@@ -154,13 +157,6 @@ def example_var_mt(seed_index):
         # active learning
         misses = 0
         while n < n_final:
-
-            # if not MT_al._full_leaf_list_up_to_date:
-                # MT_al.update_leaf_lists()
-                # MT_al.al_set_default_var_global_var()
-                # MT_al.al_calculate_leaf_proportions()
-                # MT_al.al_stream_variant(VARIANT)
-
             props = copy.copy(MT_al.prop_jump)
 
             # generate new point
@@ -169,6 +165,7 @@ def example_var_mt(seed_index):
             prop = props[leaf_idx]
 
             draw = np.random.random_sample()
+            #TODO https://stackoverflow.com/questions/24204582/generate-multiple-independent-random-streams-in-python
 
             if prop > 0.0 and draw < prop:
                 misses = 0
@@ -244,7 +241,7 @@ def main():
 
     parser.add_argument(
                     '--variant', '-v', dest='variant', type=int,
-                    action='store', choices=[0, 1, 2, 3, 4, 5, 6], default=0
+                    action='store', default=0
                 )
 
     parser.add_argument(

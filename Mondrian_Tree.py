@@ -615,6 +615,12 @@ class Mondrian_Tree:
             self.al_stream_variant_5()
         elif var == 6:
             self.al_stream_variant_6()
+        elif var == 7:
+            self.al_stream_variant_7()
+        elif var == 8:
+            self.al_stream_variant_8()
+        elif var == 9:
+            self.al_stream_variant_9()
         else:
             raise Exception('invalid stream variant')
 
@@ -697,7 +703,62 @@ class Mondrian_Tree:
             (0.0, 1.0)
         )
 
+    def al_stream_variant_7(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
 
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = softmax(
+            (al_props - current_leaf_props) / 2.0
+        )
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
+
+    def al_stream_variant_8(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = softmax(
+            (al_props - current_leaf_props) / 5.0
+        )
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
+
+    def al_stream_variant_9(self):
+        current_num_per_leaf = []
+        for i, node in enumerate(self._full_leaf_list):
+            current_num_per_leaf.append(len(node.labelled_index))
+
+        current_num_per_leaf = np.array(current_num_per_leaf)
+        current_leaf_props = current_num_per_leaf / sum(current_num_per_leaf)
+        al_props = np.array(self._al_proportions)
+
+        self.prop_jump = softmax(
+            (al_props - current_leaf_props) / 20.0
+        )
+
+        self.prop_jump = np.interp(
+            self.prop_jump,
+            (self.prop_jump.min(), self.prop_jump.max()),
+            (0.0, 1.0)
+        )
 
     # (qk - rk)/pk
     def al_stream_variant_4(self):
